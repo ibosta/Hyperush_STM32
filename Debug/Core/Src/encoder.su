@@ -1,0 +1,2 @@
+../Core/Src/encoder.c:31:6:Encoder_Update	24	static
+../Core/Src/encoder.c:66:6:DistanceLedControl	8	static

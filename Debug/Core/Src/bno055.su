@@ -1,0 +1,14 @@
+../Core/Src/bno055.c:28:6:bno055_init	32	static
+../Core/Src/bno055.c:81:6:bno055_setOperationMode	16	static
+../Core/Src/bno055.c:100:6:bno055_setPowerMode	16	static
+../Core/Src/bno055.c:113:6:bno055_getChipID	16	static
+../Core/Src/bno055.c:130:6:bno055_getRevInfo	24	static
+../Core/Src/bno055.c:173:6:bno055_getSystemStatus	24	static
+../Core/Src/bno055.c:207:6:bno055_getCalibrationStatus	32	static
+../Core/Src/bno055.c:231:6:bno055_getVector	40	static
+../Core/Src/bno055.c:284:6:bno055_getQuaternion	40	static
+../Core/Src/bno055.c:315:6:bno055_getTemperature	16	static
+../Core/Src/bno055.c:327:6:bno055_reset	16	static
+../Core/Src/bno055.c:343:13:bno055_writeRegister	40	static
+../Core/Src/bno055.c:360:13:bno055_readRegister	48	static
+../Core/Src/bno055.c:378:13:bno055_readData	56	static

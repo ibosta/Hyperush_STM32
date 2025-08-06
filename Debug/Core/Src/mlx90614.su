@@ -1,0 +1,17 @@
+../Core/Src/mlx90614.c:24:16:mlx90614_crc8	24	static
+../Core/Src/mlx90614.c:43:13:mlx90614_read16_internal	48	static
+../Core/Src/mlx90614.c:52:13:mlx90614_write16_internal	48	static
+../Core/Src/mlx90614.c:82:9:mlx90614_calcRawTemp	24	static
+../Core/Src/mlx90614.c:113:7:mlx90614_calcTemperature	24	static
+../Core/Src/mlx90614.c:131:6:mlx90614_init	24	static
+../Core/Src/mlx90614.c:147:6:mlx90614_setUnit	16	static
+../Core/Src/mlx90614.c:152:6:mlx90614_readID	24	static
+../Core/Src/mlx90614.c:166:6:mlx90614_getEmissivity	16	static
+../Core/Src/mlx90614.c:178:6:mlx90614_setEmissivity	16	static
+../Core/Src/mlx90614.c:188:6:mlx90614_setMax	16	static
+../Core/Src/mlx90614.c:194:6:mlx90614_setMin	16	static
+../Core/Src/mlx90614.c:200:6:mlx90614_getMax	16	static
+../Core/Src/mlx90614.c:211:6:mlx90614_getMin	16	static
+../Core/Src/mlx90614.c:222:6:mlx90614_getAmbient	16	static
+../Core/Src/mlx90614.c:233:6:mlx90614_getObject1	16	static
+../Core/Src/mlx90614.c:245:6:mlx90614_getObject2	16	static
