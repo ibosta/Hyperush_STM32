@@ -17,6 +17,9 @@
 /* USER CODE BEGIN Includes */
 #include "INA226.h"
 #include "mlx90614.h"
+#include "bno055.h"
+#include "ir_sensor.h"
+#include "encoder.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
@@ -26,22 +29,16 @@
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
+// BNO055 sensor instance
+bno055_t bno055_sensor;
+
+// IR sensor instance
+ir_sensor_t ir_sensor;
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
-// BNO055 Defines
-#define BNO055_ADDRESS        (0x28 << 1)
-#define BNO055_CHIP_ID_ADDR   0x00
-#define BNO055_PAGE_ID_ADDR   0x07
-#define BNO055_OPR_MODE_ADDR  0x3D
-#define BNO055_PWR_MODE_ADDR  0x3E
-#define BNO055_SYS_TRIGGER_ADDR 0x3F
-#define BNO055_ACCEL_DATA_X_LSB_ADDR  0x08
-#define BNO055_OPERATION_MODE_CONFIG  0x00
-#define BNO055_OPERATION_MODE_ACCONLY 0x01
-#define BNO055_POWER_MODE_NORMAL       0x00
 
 // LED Defines
 #define LD1_Pin GPIO_PIN_0
@@ -69,14 +66,7 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 
-// AccelData_t struct definition (backup'tan)
-typedef struct {
-  volatile int16_t x;
-  volatile int16_t y; 
-  volatile int16_t z;
-} AccelData_t;
-
-// INA226 Power Sensor Variables (backup isimlerle)
+// INA226 Power Sensor Variables (volatile for Live Expressions)
 volatile float ina226_bus_voltage = 0.0f;
 volatile float ina226_shunt_voltage = 0.0f;
 volatile float ina226_current = 0.0f;
@@ -86,28 +76,35 @@ volatile float ina226_power_mw = 0.0f;
 volatile uint8_t ina226_connection_status = 0;
 volatile uint32_t ina226_error_count = 0;
 
-// MLX90614 Temperature Sensor Variables (backup isimlerle)
+// MLX90614 Temperature Sensor Variables (volatile for Live Expressions)
 volatile float ambient_temp_C = 0.0f;
 volatile float object_temp_C = 0.0f;
 volatile uint8_t mlx_connection_status = 0;
 volatile uint32_t ambient_error_count = 0;
 volatile uint32_t object_error_count = 0;
 
-// BNO055 Accelerometer Variables (backup isimlerle)
-volatile AccelData_t accel_data = {0, 0, 0};
+// BNO055 Accelerometer Variables (volatile for Live Expressions)
+volatile float accel_x = 0.0f;
+volatile float accel_y = 0.0f;
+volatile float accel_z = 0.0f;
 
-// Encoder Değişkenleri (encoder.c'den extern) - DOKUNMUYORUZ
+// BNO055 Gyroscope Variables (volatile for Live Expressions)
+volatile float gyro_x = 0.0f;
+volatile float gyro_y = 0.0f;
+volatile float gyro_z = 0.0f;
+
+// Encoder Değişkenleri (encoder.c'den extern)
 extern volatile int32_t encoder_position;
 extern volatile int32_t encoder_velocity;  
 extern volatile float encoder_speed;
 extern volatile float encoder_total_distance;
 
-// IR Sensör Variables (backup isimlerle)
+// IR Sensör Variables (volatile for Live Expressions)
 volatile uint8_t ir_sensor_state = 0;
 volatile uint8_t last_ir_sensor_state = 1;
 volatile uint32_t ir_object_count = 0;
 
-// Additional global variables from backup
+// Additional global variables for sensor operations
 MLX90614_t mlx90614_sensor_instance;
 char uart_buffer[512];
 
@@ -123,125 +120,14 @@ static void MX_USART2_UART_Init(void);
 static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
 
-// Sensor Function Prototypes (backup'tan)
-void INA226_Test_Simple(void);
-void INA226_ReadAllValues_Fixed(void);
-void MLX90614_ReadTemps(void);
-uint8_t BNO055_Init(void);
-uint8_t BNO055_ReadReg(uint8_t reg, uint8_t* value);
-uint8_t BNO055_ReadRegs(uint8_t reg, uint8_t* buf, uint8_t len);
-uint8_t BNO055_WriteReg(uint8_t reg, uint8_t value);
-void BNO055_ReadAccel(void);
-void IR_Sensor_Check(void);
+// No sensor function prototypes - using existing libraries
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-// INA226 Simple Test Function (backup'tan)
-void INA226_Test_Simple(void) {
-    sprintf(uart_buffer, "I2C2 adres taraması (0x40-0x4F):\r\n");
-    HAL_UART_Transmit(&huart2,(uint8_t*)uart_buffer,strlen(uart_buffer),10);
-    for (uint8_t addr = 0x40; addr <= 0x4F; addr++) {
-        if (HAL_I2C_IsDeviceReady(&hi2c2, addr << 1, 3, 10) == HAL_OK) {
-            sprintf(uart_buffer, "  Cihaz bulundu: 0x%02X\r\n", addr);
-            HAL_UART_Transmit(&huart2,(uint8_t*)uart_buffer,strlen(uart_buffer),10);
-        }
-    }
-    uint16_t device_id = INA226_ID();
-    sprintf(uart_buffer, "INA226 Device ID: 0x%04X (0x2260 bekleniyor)\r\n", device_id);
-    HAL_UART_Transmit(&huart2,(uint8_t*)uart_buffer,strlen(uart_buffer),10);
-    if(device_id == 0x2260) {
-        ina226_connection_status = 1;
-        sprintf(uart_buffer, "INA226 bağlantısı BAŞARILI!\r\n");
-    } else {
-        ina226_connection_status = 0;
-        sprintf(uart_buffer, "INA226 bağlantısı BAŞARISIZ!\r\n");
-    }
-    HAL_UART_Transmit(&huart2,(uint8_t*)uart_buffer,strlen(uart_buffer),10);
-}
-
-// INA226 Read All Values Function (backup'tan)
-void INA226_ReadAllValues_Fixed(void) {
-    if(ina226_connection_status == 1) {
-        ina226_bus_voltage = INA226_BusVoltage();
-        ina226_shunt_voltage = INA226_ShuntVoltage() * 1000.0f;
-        ina226_current = INA226_Current();
-        ina226_current_ma = ina226_current * 1000.0f;
-        ina226_power = INA226_Power();
-        ina226_power_mw = ina226_power * 1000.0f;
-        if(ina226_bus_voltage < 0.0f || ina226_bus_voltage > 36.0f){
-            ina226_error_count++;
-        }
-    }
-}
-
-// MLX90614 Temperature Reading Function (backup'tan)
-void MLX90614_ReadTemps(void) {
-    float ambient=0.0f, object=0.0f;
-    if(mlx90614_getAmbient(&mlx90614_sensor_instance, &ambient)) {
-        ambient_temp_C = ambient;
-    } else { 
-        ambient_error_count++; 
-        mlx_connection_status=0; 
-    }
-    if(mlx90614_getObject1(&mlx90614_sensor_instance, &object)) {
-        object_temp_C = object;
-    } else { 
-        object_error_count++; 
-        mlx_connection_status=0; 
-    }
-    if(ambient_error_count==0 && object_error_count==0) {
-        mlx_connection_status=1;
-    }
-}
-
-// BNO055 Functions (backup'tan)
-uint8_t BNO055_ReadReg(uint8_t reg, uint8_t* value){
-    return HAL_I2C_Mem_Read(&hi2c2, BNO055_ADDRESS, reg, 1, value, 1, 10);
-}
-
-uint8_t BNO055_WriteReg(uint8_t reg, uint8_t value){
-    return HAL_I2C_Mem_Write(&hi2c2, BNO055_ADDRESS, reg, 1, &value, 1, 10);
-}
-
-uint8_t BNO055_ReadRegs(uint8_t reg, uint8_t* buf, uint8_t len){
-    return HAL_I2C_Mem_Read(&hi2c2, BNO055_ADDRESS, reg, 1, buf, len, 10);
-}
-
-uint8_t BNO055_Init(void){
-    uint8_t id=0;
-    if(BNO055_ReadReg(BNO055_CHIP_ID_ADDR, &id)!=HAL_OK) return 0;
-    if(id!=0xA0) return 0;
-    if(BNO055_WriteReg(BNO055_PWR_MODE_ADDR, BNO055_POWER_MODE_NORMAL)!=HAL_OK) return 0;
-    HAL_Delay(1);
-    if(BNO055_WriteReg(BNO055_OPR_MODE_ADDR, BNO055_OPERATION_MODE_CONFIG)!=HAL_OK) return 0;
-    HAL_Delay(1);
-    if(BNO055_WriteReg(BNO055_PAGE_ID_ADDR,0)!=HAL_OK) return 0;
-    if(BNO055_WriteReg(BNO055_OPR_MODE_ADDR, BNO055_OPERATION_MODE_ACCONLY)!=HAL_OK) return 0;
-    HAL_Delay(1);
-    return 1;
-}
-
-void BNO055_ReadAccel(void){
-    uint8_t buf[6];
-    if(BNO055_ReadRegs(BNO055_ACCEL_DATA_X_LSB_ADDR, buf, 6)==HAL_OK){
-        accel_data.x = (int16_t)(buf[1]<<8 | buf[0]);
-        accel_data.y = (int16_t)(buf[3]<<8 | buf[2]);
-        accel_data.z = (int16_t)(buf[5]<<8 | buf[4]);
-    }
-}
-
-// IR Sensor Check Function (backup'tan)
-void IR_Sensor_Check(void){
-    uint8_t state = HAL_GPIO_ReadPin(GPIOF, GPIO_PIN_5);
-    ir_sensor_state = state;
-    if(last_ir_sensor_state != state){
-        if(state == 0) ir_object_count++;
-    }
-    last_ir_sensor_state = state;
-}
+// All sensor functions will use existing libraries
 
 /* USER CODE END 0 */
 
@@ -283,28 +169,52 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   
-  // MLX90614 sensor instance başlatma (backup'tan)
+  // BNO055 sensörünü başlat
+  if(bno055_init(&bno055_sensor, &hi2c2, BNO055_ADDRESS_A)) {
+      bno055_setOperationMode(&bno055_sensor, OPERATION_MODE_AMG); // Accelerometer + Magnetometer + Gyroscope
+      HAL_Delay(100);
+      sprintf(uart_buffer, "BNO055 initialized successfully (AMG mode).\r\n");
+  } else {
+      sprintf(uart_buffer, "BNO055 initialization failed.\r\n");
+  }
+  HAL_UART_Transmit(&huart2,(uint8_t*)uart_buffer,strlen(uart_buffer),10);
+  
+  // MLX90614 sensor instance initialization
   mlx90614_init(&mlx90614_sensor_instance, &hi2c1, 0xB4);
 
-  sprintf(uart_buffer, "=== Çoklu Sensör Sistemi Başlatılıyor ===\r\n");
+  // IR sensor'ü başlat
+  ir_sensor_init(&ir_sensor, IR_SENSOR_GPIO_Port, IR_SENSOR_Pin);
+
+  sprintf(uart_buffer, "=== Multi-Sensor System Starting ===\r\n");
   HAL_UART_Transmit(&huart2,(uint8_t*)uart_buffer,strlen(uart_buffer),10);
 
-  // INA226 başlatma ve test (I2C2)
+  // INA226 initialization (I2C2)
   INA226_INIT();
   INA226_SetCalibration(0.002, 10.0); // 2mOhm shunt, 10A max current
-  HAL_Delay(1);
-  INA226_Test_Simple();
+  HAL_Delay(100);
 
-  // BNO055 başlatma (I2C2)
-  if(!BNO055_Init()){
-      sprintf(uart_buffer, "BNO055 başlatılamadı!\r\n");
-      HAL_UART_Transmit(&huart2,(uint8_t*)uart_buffer,strlen(uart_buffer),10);
+  // Test INA226 connection
+  uint16_t device_id = INA226_ID();
+  if(device_id == 0x2260) {
+      ina226_connection_status = 1;
+      sprintf(uart_buffer, "INA226 connected successfully!\r\n");
   } else {
-      sprintf(uart_buffer, "BNO055 başlatıldı.\r\n");
-      HAL_UART_Transmit(&huart2,(uint8_t*)uart_buffer,strlen(uart_buffer),10);
+      ina226_connection_status = 0;
+      sprintf(uart_buffer, "INA226 connection failed!\r\n");
   }
+  HAL_UART_Transmit(&huart2,(uint8_t*)uart_buffer,strlen(uart_buffer),10);
 
-  // Encoder başlatma (TIM3 kullanıyoruz) - DOKUNMUYORUZ
+  // BNO055 initialization (I2C2) - using existing library
+  if(bno055_init(&bno055_sensor, &hi2c2, BNO055_ADDRESS_A)) {
+      bno055_setOperationMode(&bno055_sensor, OPERATION_MODE_ACCONLY);
+      HAL_Delay(100);
+      sprintf(uart_buffer, "BNO055 initialized successfully.\r\n");
+  } else {
+      sprintf(uart_buffer, "BNO055 initialization failed.\r\n");
+  }
+  HAL_UART_Transmit(&huart2,(uint8_t*)uart_buffer,strlen(uart_buffer),10);
+
+  // Encoder initialization (TIM3) - NOT TOUCHING
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
   HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_SET);
   
@@ -318,31 +228,75 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     
-    // Sensör okuma döngüsü (backup'tan)
-    INA226_Test_Simple();
-    INA226_ReadAllValues_Fixed();
-    MLX90614_ReadTemps();
-    BNO055_ReadAccel();
-    Encoder_Update();
-    IR_Sensor_Check();
+    // Read sensor data using existing libraries
+    if(ina226_connection_status == 1) {
+        ina226_bus_voltage = INA226_BusVoltage();
+        ina226_shunt_voltage = INA226_ShuntVoltage() * 1000.0f;
+        ina226_current = INA226_Current();
+        ina226_current_ma = ina226_current * 1000.0f;
+        ina226_power = INA226_Power();
+        ina226_power_mw = ina226_power * 1000.0f;
+    }
     
-    // Debug output (backup format)
+    // MLX90614 Temperature readings
+    float ambient=0.0f, object=0.0f;
+    if(mlx90614_getAmbient(&mlx90614_sensor_instance, &ambient)) {
+        ambient_temp_C = ambient;
+        mlx_connection_status = 1;
+    } else { 
+        ambient_error_count++; 
+        mlx_connection_status = 0; 
+    }
+    if(mlx90614_getObject1(&mlx90614_sensor_instance, &object)) {
+        object_temp_C = object;
+    } else { 
+        object_error_count++; 
+    }
+    
+    // BNO055 Accelerometer readings using existing library
+    bno055_vector_t accel_vector;
+    if(bno055_getVector(&bno055_sensor, VECTOR_ACCELEROMETER, &accel_vector)) {
+        accel_x = accel_vector.x;
+        accel_y = accel_vector.y;
+        accel_z = accel_vector.z;
+    }
+    
+    // BNO055 Gyroscope readings using existing library
+    bno055_vector_t gyro_vector;
+    if(bno055_getVector(&bno055_sensor, VECTOR_GYROSCOPE, &gyro_vector)) {
+        gyro_x = gyro_vector.x;
+        gyro_y = gyro_vector.y;
+        gyro_z = gyro_vector.z;
+    }
+    
+    // Encoder readings (external function)
+    Encoder_Update();
+    
+    // IR Sensor readings using existing library
+    ir_sensor_update(&ir_sensor);
+    ir_sensor_state = ir_sensor_get_state(&ir_sensor);
+    if(last_ir_sensor_state != ir_sensor_state){
+        if(ir_sensor_state == 0) ir_object_count++;
+    }
+    last_ir_sensor_state = ir_sensor_state;
+    
+    // Debug output with volatile variables
     sprintf(uart_buffer,
         "INA226: Bus=%.3fV Shunt=%.1fmV I=%.2fmA P=%.2fmW\r\n"
         "MLX90614: Ambient=%.2fC Object=%.2fC\r\n"
-        "BNO055 Accel: X=%d Y=%d Z=%d\r\n"
+        "BNO055 Accel: X=%.2f Y=%.2f Z=%.2f\r\n"
         "Encoder: Pos=%.2fmm Speed=%.2fmm/s\r\n"
         "IR Sensor: State=%d ObjectCount=%lu\r\n\n",
         ina226_bus_voltage, ina226_shunt_voltage, ina226_current_ma, ina226_power_mw,
         ambient_temp_C, object_temp_C,
-        accel_data.x, accel_data.y, accel_data.z,
+        accel_x, accel_y, accel_z,
         encoder_total_distance, encoder_speed,
         ir_sensor_state, ir_object_count
     );
 
     HAL_UART_Transmit(&huart2,(uint8_t*)uart_buffer,strlen(uart_buffer),10);
 
-    HAL_Delay(10); // 10ms döngü gecikmesi
+    HAL_Delay(100); // 100ms loop delay
   }
   /* USER CODE END 3 */
 }
@@ -609,7 +563,7 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  // IR sensör için GPIOF Pin 5 (backup'tan)
+  // IR sensör için GPIOF Pin 5
   GPIO_InitStruct.Pin = GPIO_PIN_5;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;

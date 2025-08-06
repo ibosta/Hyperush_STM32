@@ -30,7 +30,8 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_uart.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_uart_ex.h \
  ../Core/Inc/encoder.h ../Core/Inc/INA226.h ../Core/Inc/main.h \
- ../Core/Inc/mlx90614.h
+ ../Core/Inc/mlx90614.h ../Core/Inc/bno055.h ../Core/Inc/ir_sensor.h \
+ ../Core/Inc/encoder.h
 ../Core/Inc/main.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal.h:
 ../Core/Inc/stm32f7xx_hal_conf.h:
@@ -66,3 +67,6 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Core/Inc/INA226.h:
 ../Core/Inc/main.h:
 ../Core/Inc/mlx90614.h:
+../Core/Inc/bno055.h:
+../Core/Inc/ir_sensor.h:
+../Core/Inc/encoder.h:

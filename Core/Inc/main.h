@@ -60,6 +60,20 @@ extern TIM_HandleTypeDef htim3;
 
 /* USER CODE BEGIN Private defines */
 
+// GPIO Definitions
+#define LD1_Pin GPIO_PIN_0
+#define LD1_GPIO_Port GPIOB
+
+#define LD2_Pin GPIO_PIN_7
+#define LD2_GPIO_Port GPIOB
+
+#define LD3_Pin GPIO_PIN_14
+#define LD3_GPIO_Port GPIOB
+
+// IR Sensor GPIO
+#define IR_SENSOR_Pin GPIO_PIN_5
+#define IR_SENSOR_GPIO_Port GPIOF
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

@@ -1,7 +1,6 @@
 "./Core/Src/INA226.o"
 "./Core/Src/bno055.o"
 "./Core/Src/encoder.o"
-"./Core/Src/encoder_new.o"
 "./Core/Src/ir_sensor.o"
 "./Core/Src/main.o"
 "./Core/Src/mlx90614.o"

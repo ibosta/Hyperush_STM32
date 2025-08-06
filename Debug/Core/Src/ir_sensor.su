@@ -1,0 +1,5 @@
+../Core/Src/ir_sensor.c:17:6:ir_sensor_init	24	static
+../Core/Src/ir_sensor.c:33:6:ir_sensor_update	24	static
+../Core/Src/ir_sensor.c:54:6:ir_sensor_read_digital	16	static
+../Core/Src/ir_sensor.c:62:19:ir_sensor_get_state	16	static
+../Core/Src/ir_sensor.c:70:10:ir_sensor_get_detection_count	16	static
