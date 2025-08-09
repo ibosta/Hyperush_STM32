@@ -20,7 +20,7 @@ volatile int32_t encoder_last = 0;
 volatile int32_t encoder_velocity = 0;
 volatile float encoder_speed = 0.0f;
 volatile float encoder_total_distance = 0.0f;
-const float encoder_distance_per_pulse = 100.0f / 3600.0f;  // 100 mm/devir, 3600 pulse/rev
+const float encoder_distance_per_pulse = 50.7f / 3600.0f;  // 100 mm/devir, 3600 pulse/rev
 volatile uint32_t last_tick = 0;
 
 /**
