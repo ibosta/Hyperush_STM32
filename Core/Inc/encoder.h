@@ -23,11 +23,14 @@ extern "C" {
 #include <stdbool.h>
 
 /* Encoder Configuration */
-#define ENCODER_DISTANCE_PER_PULSE    (100.0f / 3600.0f)  // 100 mm/devir, 3600 pulse/rev
+#define ENCODER_DISTANCE_PER_PULSE    (65.0f / 3600.0f)  // 100 mm/devir, 3600 pulse/rev
 
 /* Global Variables */
 extern volatile int32_t encoder_position;
 extern volatile int32_t encoder_last;
+
+/* Function Prototypes */
+float get_total_distance(void);  // Returns total distance in centimeters
 extern volatile int32_t encoder_velocity;
 extern volatile float encoder_speed;
 extern volatile float encoder_total_distance;

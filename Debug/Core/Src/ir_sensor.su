@@ -3,3 +3,4 @@
 ../Core/Src/ir_sensor.c:54:6:ir_sensor_read_digital	16	static
 ../Core/Src/ir_sensor.c:62:19:ir_sensor_get_state	16	static
 ../Core/Src/ir_sensor.c:70:10:ir_sensor_get_detection_count	16	static
+../Core/Src/ir_sensor.c:78:6:ir_sensor_is_object_detected	16	static

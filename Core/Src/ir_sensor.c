@@ -74,3 +74,11 @@ uint32_t ir_sensor_get_detection_count(ir_sensor_t* sensor) {
     
     return sensor->detection_count;
 }
+
+bool ir_sensor_is_object_detected(ir_sensor_t* sensor) {
+    if (sensor == NULL) {
+        return false;
+    }
+    
+    return (sensor->state == IR_SENSOR_STATE_OBJECT_DETECTED);
+}

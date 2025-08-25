@@ -31,7 +31,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "encoder.h"
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -47,32 +47,26 @@ extern "C" {
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
 
+/* GPIO Definitions */
+#define GPIOG               ((GPIO_TypeDef *) GPIOG_BASE)
+#define GPIOD               ((GPIO_TypeDef *) GPIOD_BASE)
+
 /* USER CODE END EM */
+
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-extern TIM_HandleTypeDef htim3;
+
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define levitasyon_motoru_Pin GPIO_PIN_6
+#define levitasyon_motoru_GPIO_Port GPIOF
 
 /* USER CODE BEGIN Private defines */
-
-// GPIO Definitions
-#define LD1_Pin GPIO_PIN_0
-#define LD1_GPIO_Port GPIOB
-
-#define LD2_Pin GPIO_PIN_7
-#define LD2_GPIO_Port GPIOB
-
-#define LD3_Pin GPIO_PIN_14
-#define LD3_GPIO_Port GPIOB
-
-// IR Sensor GPIO
-#define IR_SENSOR_Pin GPIO_PIN_5
-#define IR_SENSOR_GPIO_Port GPIOF
 
 /* USER CODE END Private defines */
 

@@ -1,0 +1,4 @@
+../Core/Src/udp_echoserver.c:23:6:__udp_echoserver_init_oo	16	static
+../Core/Src/udp_echoserver.c:39:6:__udp_echoserver_receive_callback_oo	192	static
+../Core/Src/udp_echoserver.c:138:6:CheckLevitationStop	8	static
+../Core/Src/udp_echoserver.c:148:6:ProcessLevitation	16	static
