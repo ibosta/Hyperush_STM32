@@ -9,7 +9,17 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include Middlewares/Third_Party/LwIP/src/netif/ppp/subdir.mk
+-include Middlewares/Third_Party/LwIP/src/netif/subdir.mk
+-include Middlewares/Third_Party/LwIP/src/core/ipv6/subdir.mk
+-include Middlewares/Third_Party/LwIP/src/core/ipv4/subdir.mk
+-include Middlewares/Third_Party/LwIP/src/core/subdir.mk
+-include Middlewares/Third_Party/LwIP/src/apps/mqtt/subdir.mk
+-include Middlewares/Third_Party/LwIP/src/api/subdir.mk
+-include LWIP/Target/subdir.mk
+-include LWIP/App/subdir.mk
 -include Drivers/STM32F7xx_HAL_Driver/Src/subdir.mk
+-include Drivers/BSP/Components/lan8742/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk
 -include objects.mk
@@ -34,34 +44,34 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := HYPERUSJ
+BUILD_ARTIFACT_NAME := UDP-test3
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-HYPERUSJ.elf \
+UDP-test3.elf \
 
 MAP_FILES += \
-HYPERUSJ.map \
+UDP-test3.map \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-HYPERUSJ.list \
+UDP-test3.list \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: HYPERUSJ.elf secondary-outputs
+main-build: UDP-test3.elf secondary-outputs
 
 # Tool invocations
-HYPERUSJ.elf HYPERUSJ.map: $(OBJS) $(USER_OBJS) /Users/ibrahimtaskiran/STM32CubeIDE/workspace_1.19.0/HYPERUSJ/STM32F756ZGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "HYPERUSJ.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"/Users/ibrahimtaskiran/STM32CubeIDE/workspace_1.19.0/HYPERUSJ/STM32F756ZGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="HYPERUSJ.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv5-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+UDP-test3.elf UDP-test3.map: $(OBJS) $(USER_OBJS) /Users/ibrahimtaskiran/STM32CubeIDE/workspace_1.19.0/UDP-test3/STM32F756ZGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "UDP-test3.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"/Users/ibrahimtaskiran/STM32CubeIDE/workspace_1.19.0/UDP-test3/STM32F756ZGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="UDP-test3.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv5-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -70,14 +80,14 @@ default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-HYPERUSJ.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "HYPERUSJ.list"
+UDP-test3.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "UDP-test3.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) HYPERUSJ.elf HYPERUSJ.list HYPERUSJ.map default.size.stdout
+	-$(RM) UDP-test3.elf UDP-test3.list UDP-test3.map default.size.stdout
 	-@echo ' '
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)

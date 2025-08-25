@@ -119,3 +119,12 @@ void DistanceLedControl(void)
         }
     }
 }
+
+/**
+  * @brief  Get total distance in centimeters
+  * @param  None
+  * @retval Total distance in centimeters
+  */
+float get_total_distance(void) {
+    return encoder_total_distance * 10.0f;  // mm'den cm'ye çevir
+}
